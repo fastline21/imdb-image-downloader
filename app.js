@@ -9,39 +9,64 @@ app.get('/:id', async (req, res) => {
     const { id } = req.params;
     const requestURL = `https://www.imdb.com/title/${id}`;
 
-    try {
-        const result = await rp(requestURL);
-        const $ = cheerio.load(result);
+    let result = {
+        success: false
+    }
 
-        const title = $('div.title_wrapper > h1', result).text().trim();
-        const imgURLSource = $('div.poster > a', result).attr().href;
-        let imgURL = '';
-
+    const getIMDBData = async (requestURL) => {
         try {
-            const imgResult = await rp(`https://www.imdb.com${imgURLSource}`);
-            const $ = cheerio.load(imgResult);
+            const pageResult = await rp(requestURL);
+            const $ = cheerio.load(pageResult);
 
-            const imgLoad = $('div.ipc-page-content-container > div.media-viewer > div.iUyzNI > img', imgResult);
+            const title = $('div.title_wrapper > h1', pageResult).text().trim();
+            const imgURLSource = $('div.poster > a', pageResult).attr();
 
-            for (let i = 0; i < imgLoad.length; i++) {
-                const classAttr = imgLoad[i].attribs.class;
-                if (!classAttr.includes('peek')) {
-                    imgURL = imgLoad[i].attribs.src;
+            // Sometimes the poster is undefined
+            // So it needs to return false
+            // In order to rerun the function again.
+            if (!imgURLSource) {
+                return {
+                    success: false
                 }
+            }
+
+            let imgURL = '';
+
+            try {
+                const imgResult = await rp(`https://www.imdb.com${imgURLSource.href}`);
+                const $ = cheerio.load(imgResult);
+
+                const imgLoad = $('div.ipc-page-content-container > div.media-viewer > div.iUyzNI > img', imgResult);
+
+                for (let i = 0; i < imgLoad.length; i++) {
+                    const classAttr = imgLoad[i].attribs.class;
+                    if (!classAttr.includes('peek')) {
+                        imgURL = imgLoad[i].attribs.src;
+                    }
+                }
+            } catch (error) {
+                console.log(error);
+                res.status(404).json({ message: error.message });
+            }
+            return {
+                success: true,
+                title,
+                imgURL
             }
         } catch (error) {
             console.log(error);
-            res.status(404).json({ message: error.message });
+            res.status(404).json({ message: error.message })
         }
-
-        res.json({
-            title,
-            imgURL
-        });
-    } catch (error) {
-        console.log(error);
-        res.status(404).json({ message: error.message })
     }
+
+    while (!result.success) {
+        result = { ...await getIMDBData(requestURL) };
+    }
+
+    res.json({
+        title: result.title,
+        imgURL: result.imgURL
+    });
 });
 
 const port = process.env.PORT || 5000;
