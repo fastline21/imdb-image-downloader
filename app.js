@@ -3,6 +3,8 @@ const logger = require('morgan');
 const rp = require('request-promise');
 const cheerio = require('cheerio');
 
+require('dotenv').config();
+
 const app = express();
 
 app.get('/:id', async (req, res) => {
