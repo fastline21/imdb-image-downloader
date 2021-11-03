@@ -3,10 +3,6 @@ import axios from 'axios';
 import { GET_DOWNLOAD_INFO, DOWNLOAD_LOADING, DOWNLOAD_ERROR } from './types';
 
 export const getDownloadInfo = (imdbID) => async (dispatch) => {
-	console.log(
-		process.env.REACT_APP_VALIDATE_CODE,
-		typeof process.env.REACT_APP_VALIDATE_CODE
-	);
 	setLoading(dispatch);
 
 	try {
