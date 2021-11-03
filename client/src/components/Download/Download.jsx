@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Form, Button, Image } from 'react-bootstrap';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
+import axios from 'axios';
 
 // Actions
 import { getDownloadInfo } from 'actions/downloadAction';
@@ -45,21 +46,22 @@ const Download = ({
 		setFormData(initialFormData);
 	};
 
-	const downloadFile = (file) => {
-		const blobFile = window.URL.createObjectURL(
-			new Blob([file], {
-				type: 'application/octet-stream',
-			})
-		);
-
-		return blobFile;
-	};
-
-	const downloadName = (title, year, file) => {
+	const downloadFile = async (title, year, file) => {
 		const filename = title.replace(/[^a-zA-Z 0-9.]+/g, '');
 		const ext = file.split(/[#?]/)[0].split('.').pop().trim();
 
-		return `${filename} (${year}).${ext}`;
+		const res = await axios({
+			url: file,
+			method: 'GET',
+			responseType: 'blob',
+		});
+
+		const url = window.URL.createObjectURL(new Blob([res.data]));
+		const link = document.createElement('a');
+		link.href = url;
+		link.setAttribute('download', `${filename} (${year}).${ext}`);
+		document.body.appendChild(link);
+		link.click();
 	};
 
 	useEffect(() => {
@@ -103,13 +105,14 @@ const Download = ({
 					</h3>
 					<Image src={imgURL} fluid />
 					<div className='d-grid gap-2 my-3'>
-						<a
-							href={downloadFile(imgURL)}
-							download={downloadName(title, year, imgURL)}
-							className='btn btn-primary'
+						<Button
+							onClick={(event) => {
+								event.preventDefault();
+								downloadFile(title, year, imgURL);
+							}}
 						>
 							Download
-						</a>
+						</Button>
 					</div>
 				</>
 			) : (
