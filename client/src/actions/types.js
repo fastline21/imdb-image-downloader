@@ -1,0 +1,4 @@
+// Download
+export const GET_DOWNLOAD_INFO = 'GET_DOWNLOAD_INFO';
+export const DOWNLOAD_LOADING = 'DOWNLOAD_LOADING';
+export const DOWNLOAD_ERROR = 'DOWNLOAD_ERROR';
