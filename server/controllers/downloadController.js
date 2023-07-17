@@ -27,7 +27,7 @@ const fetchIMDbData = async (imdbID) => {
 			const pageResult = await rp(requestURL);
 			const $ = cheerio.load(pageResult);
 
-			const title = $(process.env.IMDB_TITLE, pageResult).text().trim();
+			const title = $(process.env.IMDB_TITLE, pageResult).text();
 			console.log(`${requestID} - [IMDB_FETCH_DATA] - TITLE: ${title}`);
 
 			const year = $(process.env.IMDB_YEAR, pageResult)[0].children[0].data;
